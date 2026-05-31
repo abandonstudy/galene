@@ -1,0 +1,39 @@
+name: Build Galene for Windows
+
+# 触发条件：当你推代码到 master 分支，或者手动点击按钮时触发
+on:
+  push:
+    branches: [ "master", "main" ]
+  workflow_dispatch: 
+
+jobs:
+  build:
+    # 运行环境：使用 GitHub 提供的最新版 Ubuntu Linux 服务器（免费且速度极快）
+    runs-on: ubuntu-latest 
+
+    steps:
+    # 第一步：拉取你的仓库代码
+    - name: Checkout Code
+      uses: actions/checkout@v4
+
+    # 第二步：配置 Go 语言环境
+    - name: Setup Go
+      uses: actions/setup-go@v5
+      with:
+        go-version: '1.21' # 指定 Go 版本，1.21 足以编译当前的 Galene
+
+    # 第三步：执行跨平台编译
+    - name: Build Windows Executable
+      env:
+        GOOS: windows       # 核心设置：目标操作系统设为 Windows
+        GOARCH: amd64       # 核心设置：目标架构设为 64位
+        CGO_ENABLED: 0      # 依据 Galene 官方文档要求：禁用 CGO
+      run: |
+        go build -ldflags="-s -w" -o galene-windows-amd64.exe
+
+    # 第四步：将编译好的 exe 文件打包并提供下载
+    - name: Upload Artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: galene-windows-exe
+        path: galene-windows-amd64.exe
